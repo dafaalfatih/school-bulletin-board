@@ -143,6 +143,7 @@ function Index() {
                 {filtered.map((a) => (
                   <AnnouncementCard
                     key={a.id}
+                    id={a.id}
                     title={a.title}
                     content={a.content}
                     category={a.category}
