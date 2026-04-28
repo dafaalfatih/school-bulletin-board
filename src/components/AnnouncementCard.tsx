@@ -1,4 +1,5 @@
 import { Calendar } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -12,6 +13,7 @@ const CATEGORY_META: Record<Category, { label: string; className: string }> = {
 };
 
 interface Props {
+  id: string;
   title: string;
   content: string;
   category: Category;
@@ -19,12 +21,17 @@ interface Props {
   isNew?: boolean;
 }
 
-export function AnnouncementCard({ title, content, category, createdAt, isNew }: Props) {
+export function AnnouncementCard({ id, title, content, category, createdAt, isNew }: Props) {
   const meta = CATEGORY_META[category];
   const date = new Date(createdAt);
 
   return (
-    <Card className="relative overflow-hidden transition-all hover:shadow-[var(--shadow-card)]">
+    <Link
+      to="/announcement/$id"
+      params={{ id }}
+      className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl"
+    >
+    <Card className="relative overflow-hidden transition-all hover:shadow-[var(--shadow-card)] hover:-translate-y-0.5">
       {isNew && (
         <span className="absolute right-3 top-3 inline-flex items-center rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground shadow">
           Baru
@@ -45,8 +52,9 @@ export function AnnouncementCard({ title, content, category, createdAt, isNew }:
         <CardTitle className="mt-2 text-xl">{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="whitespace-pre-wrap text-sm text-muted-foreground">{content}</p>
+        <p className="line-clamp-3 whitespace-pre-wrap text-sm text-muted-foreground">{content}</p>
       </CardContent>
     </Card>
+    </Link>
   );
 }
