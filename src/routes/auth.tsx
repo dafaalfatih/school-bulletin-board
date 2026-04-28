@@ -106,7 +106,7 @@ function SignUpForm() {
     e.preventDefault();
     setBusy(true);
     const redirectUrl = `${window.location.origin}/`;
-    const { error } = await supabase.auth.signUp({
+    const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -114,11 +114,18 @@ function SignUpForm() {
         data: { full_name: fullName },
       },
     });
+    if (signUpError) {
+      setBusy(false);
+      toast.error(signUpError.message);
+      return;
+    }
+    // Langsung masuk setelah daftar (email auto-confirm aktif)
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
-    if (error) {
-      toast.error(error.message);
+    if (signInError) {
+      toast.error(signInError.message);
     } else {
-      toast.success("Akun dibuat. Silakan cek email untuk verifikasi.");
+      toast.success("Akun dibuat dan berhasil masuk");
     }
   };
 
