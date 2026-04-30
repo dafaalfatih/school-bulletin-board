@@ -31,10 +31,10 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Pengumuman Sekolah" },
+      { title: "Pengumuman HSI Boarding School" },
       { name: "description", content: "Pusat informasi & pengumuman sekolah untuk siswa, guru, dan OSIS." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Pengumuman Sekolah" },
+      { property: "og:title", content: "Pengumuman HSI Boarding School" },
       { property: "og:description", content: "Pusat informasi & pengumuman sekolah." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
