@@ -113,3 +113,50 @@ function AnnouncementDetail() {
     </div>
   );
 }
+
+function Attachment({ url, name, type }: { url: string; name: string; type: string }) {
+  const isImage = type.startsWith("image/");
+  const isPdf = type === "application/pdf";
+  return (
+    <div className="mt-6 rounded-xl border bg-muted/20 p-4">
+      <div className="mb-3 flex items-center gap-2 text-sm font-medium">
+        <FileText className="h-4 w-4" />
+        Lampiran
+      </div>
+      {isImage && (
+        <a href={url} target="_blank" rel="noreferrer" className="block">
+          <img
+            src={url}
+            alt={name}
+            className="max-h-96 w-full rounded-lg border object-contain"
+            loading="lazy"
+          />
+        </a>
+      )}
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+        <span className="truncate text-sm text-muted-foreground">{name}</span>
+        <div className="flex gap-2">
+          {isPdf && (
+            <Button asChild variant="outline" size="sm">
+              <a href={url} target="_blank" rel="noreferrer">
+                <ExternalLink className="mr-1 h-4 w-4" /> Buka PDF
+              </a>
+            </Button>
+          )}
+          {!isPdf && !isImage && (
+            <Button asChild variant="outline" size="sm">
+              <a href={url} target="_blank" rel="noreferrer">
+                <ExternalLink className="mr-1 h-4 w-4" /> Lihat File
+              </a>
+            </Button>
+          )}
+          <Button asChild size="sm">
+            <a href={url} download={name}>
+              <Download className="mr-1 h-4 w-4" /> Download
+            </a>
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
