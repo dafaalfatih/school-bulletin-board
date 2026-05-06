@@ -16,6 +16,9 @@ export type Database = {
     Tables: {
       announcements: {
         Row: {
+          attachment_name: string | null
+          attachment_type: string | null
+          attachment_url: string | null
           author_id: string
           category: Database["public"]["Enums"]["announcement_category"]
           content: string
@@ -25,6 +28,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          attachment_name?: string | null
+          attachment_type?: string | null
+          attachment_url?: string | null
           author_id: string
           category?: Database["public"]["Enums"]["announcement_category"]
           content: string
@@ -34,6 +40,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          attachment_name?: string | null
+          attachment_type?: string | null
+          attachment_url?: string | null
           author_id?: string
           category?: Database["public"]["Enums"]["announcement_category"]
           content?: string
