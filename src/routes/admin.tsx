@@ -252,12 +252,14 @@ function AnnouncementDialog({
     }
 
     if (item) {
-      const patch: Record<string, unknown> = { title, content, category };
-      if (attachment_url !== undefined) {
-        patch.attachment_url = attachment_url;
-        patch.attachment_name = attachment_name;
-        patch.attachment_type = attachment_type;
-      }
+      const patch = {
+        title,
+        content,
+        category,
+        ...(attachment_url !== undefined
+          ? { attachment_url, attachment_name, attachment_type }
+          : {}),
+      };
       const { error } = await supabase
         .from("announcements")
         .update(patch)
