@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Calendar } from "lucide-react";
+import { ArrowLeft, Calendar, Download, FileText, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -20,6 +20,9 @@ type Announcement = {
   category: Category;
   created_at: string;
   updated_at: string;
+  attachment_url: string | null;
+  attachment_name: string | null;
+  attachment_type: string | null;
 };
 
 const CATEGORY_META: Record<Category, { label: string; className: string }> = {
@@ -43,7 +46,7 @@ function AnnouncementDetail() {
     }
     supabase
       .from("announcements")
-      .select("id,title,content,category,created_at,updated_at")
+      .select("id,title,content,category,created_at,updated_at,attachment_url,attachment_name,attachment_type")
       .eq("id", id)
       .maybeSingle()
       .then(({ data }) => setItem((data as Announcement | null) ?? "not_found"));
@@ -91,6 +94,13 @@ function AnnouncementDetail() {
             <div className="mt-6 whitespace-pre-wrap text-base leading-relaxed text-foreground">
               {item.content}
             </div>
+            {item.attachment_url && (
+              <Attachment
+                url={item.attachment_url}
+                name={item.attachment_name ?? "lampiran"}
+                type={item.attachment_type ?? ""}
+              />
+            )}
             {item.updated_at !== item.created_at && (
               <p className="mt-6 border-t pt-4 text-xs text-muted-foreground">
                 Terakhir diperbarui:{" "}
