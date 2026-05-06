@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Calendar } from "lucide-react";
+import { ArrowLeft, Calendar, Download, FileText, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -20,6 +20,9 @@ type Announcement = {
   category: Category;
   created_at: string;
   updated_at: string;
+  attachment_url: string | null;
+  attachment_name: string | null;
+  attachment_type: string | null;
 };
 
 const CATEGORY_META: Record<Category, { label: string; className: string }> = {
@@ -43,7 +46,7 @@ function AnnouncementDetail() {
     }
     supabase
       .from("announcements")
-      .select("id,title,content,category,created_at,updated_at")
+      .select("id,title,content,category,created_at,updated_at,attachment_url,attachment_name,attachment_type")
       .eq("id", id)
       .maybeSingle()
       .then(({ data }) => setItem((data as Announcement | null) ?? "not_found"));
@@ -91,6 +94,13 @@ function AnnouncementDetail() {
             <div className="mt-6 whitespace-pre-wrap text-base leading-relaxed text-foreground">
               {item.content}
             </div>
+            {item.attachment_url && (
+              <Attachment
+                url={item.attachment_url}
+                name={item.attachment_name ?? "lampiran"}
+                type={item.attachment_type ?? ""}
+              />
+            )}
             {item.updated_at !== item.created_at && (
               <p className="mt-6 border-t pt-4 text-xs text-muted-foreground">
                 Terakhir diperbarui:{" "}
@@ -100,6 +110,53 @@ function AnnouncementDetail() {
           </article>
         )}
       </main>
+    </div>
+  );
+}
+
+function Attachment({ url, name, type }: { url: string; name: string; type: string }) {
+  const isImage = type.startsWith("image/");
+  const isPdf = type === "application/pdf";
+  return (
+    <div className="mt-6 rounded-xl border bg-muted/20 p-4">
+      <div className="mb-3 flex items-center gap-2 text-sm font-medium">
+        <FileText className="h-4 w-4" />
+        Lampiran
+      </div>
+      {isImage && (
+        <a href={url} target="_blank" rel="noreferrer" className="block">
+          <img
+            src={url}
+            alt={name}
+            className="max-h-96 w-full rounded-lg border object-contain"
+            loading="lazy"
+          />
+        </a>
+      )}
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+        <span className="truncate text-sm text-muted-foreground">{name}</span>
+        <div className="flex gap-2">
+          {isPdf && (
+            <Button asChild variant="outline" size="sm">
+              <a href={url} target="_blank" rel="noreferrer">
+                <ExternalLink className="mr-1 h-4 w-4" /> Buka PDF
+              </a>
+            </Button>
+          )}
+          {!isPdf && !isImage && (
+            <Button asChild variant="outline" size="sm">
+              <a href={url} target="_blank" rel="noreferrer">
+                <ExternalLink className="mr-1 h-4 w-4" /> Lihat File
+              </a>
+            </Button>
+          )}
+          <Button asChild size="sm">
+            <a href={url} download={name}>
+              <Download className="mr-1 h-4 w-4" /> Download
+            </a>
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

@@ -48,6 +48,9 @@ type Announcement = {
   content: string;
   category: Category;
   created_at: string;
+  attachment_url?: string | null;
+  attachment_name?: string | null;
+  attachment_type?: string | null;
 };
 
 function AdminPage() {
@@ -69,7 +72,7 @@ function AdminPage() {
   const refresh = () => {
     supabase
       .from("announcements")
-      .select("id,title,content,category,created_at")
+      .select("id,title,content,category,created_at,attachment_url,attachment_name,attachment_type")
       .order("created_at", { ascending: false })
       .then(({ data }) => setItems((data ?? []) as Announcement[]));
   };
@@ -197,23 +200,69 @@ function AnnouncementDialog({
   const [content, setContent] = useState(item?.content ?? "");
   const [category, setCategory] = useState<Category>(item?.category ?? "umum");
   const [busy, setBusy] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [removeAttachment, setRemoveAttachment] = useState(false);
 
   useEffect(() => {
     if (open) {
       setTitle(item?.title ?? "");
       setContent(item?.content ?? "");
       setCategory(item?.category ?? "umum");
+      setFile(null);
+      setRemoveAttachment(false);
     }
   }, [open, item]);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    const ALLOWED = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
+    if (file && !ALLOWED.includes(file.type)) {
+      return toast.error("Hanya file PDF, JPG, atau PNG yang diperbolehkan");
+    }
+    if (file && file.size > 10 * 1024 * 1024) {
+      return toast.error("Ukuran file maksimal 10MB");
+    }
     setBusy(true);
+
+    let attachment_url: string | null | undefined = undefined;
+    let attachment_name: string | null | undefined = undefined;
+    let attachment_type: string | null | undefined = undefined;
+
+    if (file) {
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("announcement-attachments")
+        .upload(path, file, { contentType: file.type });
+      if (upErr) {
+        setBusy(false);
+        return toast.error(upErr.message);
+      }
+      const { data: pub } = supabase.storage
+        .from("announcement-attachments")
+        .getPublicUrl(path);
+      attachment_url = pub.publicUrl;
+      attachment_name = file.name;
+      attachment_type = file.type;
+    } else if (removeAttachment) {
+      attachment_url = null;
+      attachment_name = null;
+      attachment_type = null;
+    }
+
     if (item) {
+      const patch = {
+        title,
+        content,
+        category,
+        ...(attachment_url !== undefined
+          ? { attachment_url, attachment_name, attachment_type }
+          : {}),
+      };
       const { error } = await supabase
         .from("announcements")
-        .update({ title, content, category })
+        .update(patch)
         .eq("id", item.id);
       setBusy(false);
       if (error) return toast.error(error.message);
@@ -221,7 +270,15 @@ function AnnouncementDialog({
     } else {
       const { error } = await supabase
         .from("announcements")
-        .insert({ title, content, category, author_id: user.id });
+        .insert({
+          title,
+          content,
+          category,
+          author_id: user.id,
+          attachment_url: attachment_url ?? null,
+          attachment_name: attachment_name ?? null,
+          attachment_type: attachment_type ?? null,
+        });
       setBusy(false);
       if (error) return toast.error(error.message);
       toast.success("Pengumuman dibuat");
@@ -265,6 +322,43 @@ function AnnouncementDialog({
               value={content}
               onChange={(e) => setContent(e.target.value)}
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="file">Lampiran (PDF / JPG / PNG, opsional)</Label>
+            <Input
+              id="file"
+              type="file"
+              accept="application/pdf,image/jpeg,image/png"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+            {item?.attachment_url && !file && (
+              <div className="flex items-center justify-between rounded-md border bg-muted/30 px-3 py-2 text-sm">
+                <span className="truncate">
+                  {removeAttachment ? (
+                    <span className="text-muted-foreground line-through">
+                      {item.attachment_name}
+                    </span>
+                  ) : (
+                    <a
+                      href={item.attachment_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      {item.attachment_name ?? "Lampiran saat ini"}
+                    </a>
+                  )}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setRemoveAttachment((v) => !v)}
+                >
+                  {removeAttachment ? "Batal hapus" : "Hapus"}
+                </Button>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button type="submit" disabled={busy}>
